@@ -4,13 +4,16 @@ LDFLAGS= 	-lglfw -lGL
 
 NAME=	scop
 
-SRCS=	test.cpp
+SRCS=	test.cpp shader.cpp
 OBJS=	$(SRCS:.cpp=.o)
 
 all: $(NAME)
 
 $(NAME): $(OBJS)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) -o $(NAME)
+
+test: $(NAME)
+	./scop
 
 clean:
 	rm -rf $(OBJS)

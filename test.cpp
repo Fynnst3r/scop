@@ -1,10 +1,4 @@
-#define GL_GLEXT_PROTOTYPES 1
-#define GL3_PROTOTYPES 1
-#include <GLFW/glfw3.h>
-#include <iostream>
-#include <math.h>
-#define WIN_WIDTH 800
-#define WIN_HEIGHT 600
+#include "scop.hpp"
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height);
 
@@ -31,33 +25,6 @@ const char *fragmentShaderSource =
 		   FragColor = vec4(vertexColor, 1);
 		})";
 
-int shaderSucceded(unsigned int shader)
-{
-	int success;
-	char infoLog[512];
-	glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
-	if (!success)
-	{
-		glGetShaderInfoLog(shader, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n"
-				  << infoLog << std::endl;
-	}
-	return success;
-}
-
-int shaderProgramSucceded(unsigned int program)
-{
-	int success;
-	char infoLog[512];
-	glGetProgramiv(program, GL_LINK_STATUS, &success);
-	if (!success)
-	{
-		glGetProgramInfoLog(program, 512, NULL, infoLog);
-		std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-				  << infoLog << std::endl;
-	}
-	return success;
-}
 
 void processInput(GLFWwindow *window)
 {
@@ -65,44 +32,14 @@ void processInput(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, true);
 }
 
-unsigned int makeShaders()
-{
-	// Create Shaders
-	unsigned int vertexShader;
-	vertexShader = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-	glCompileShader(vertexShader);
-	shaderSucceded(vertexShader);
-
-	unsigned int fragmentShader;
-	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-	glCompileShader(fragmentShader);
-	shaderSucceded(fragmentShader);
-
-	unsigned int shaderProgram;
-	shaderProgram = glCreateProgram();
-
-	// Link Shaders
-	glAttachShader(shaderProgram, vertexShader);
-	glAttachShader(shaderProgram, fragmentShader);
-	glLinkProgram(shaderProgram);
-	shaderProgramSucceded(shaderProgram);
-	glUseProgram(shaderProgram);
-	glDeleteShader(vertexShader);
-	glDeleteShader(fragmentShader);
-
-	return (shaderProgram);
-}
-
 void makeTriangle(unsigned int *VBO, unsigned int *VAO)
 {
 	// Create Triangle vertecies
 	float vertices[] = {
 		// positions        // colors
-		0.5f, -0.5f, 0.0f,	1.0f, 0.5f, 0.5f,  // bottom right
-		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.5f, // bottom left
-		0.0f, 0.5f, 0.0f,	0.0f, 0.5f, 0.5f // top
+		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, 0.0f,  // bottom right
+		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
+		0.0f, 0.5f, 0.0f,	0.0f, 0.0f, 1.0f // top
 	};
 
 	glGenBuffers(1, VBO);
@@ -203,7 +140,8 @@ int main(void)
 	makeTriangle(&VBO, &VAO);
 	// makeRectangle(&VBO, &VAO, &EBO);
 
-	unsigned int shaderProgram = makeShaders();
+	Shader shaders("./shaders/shader.vs", GL_VERTEX_SHADER);
+	shaders.addShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
@@ -214,12 +152,10 @@ int main(void)
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		glUseProgram(shaderProgram);
-
 		float timeValue = glfwGetTime();
 		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-		int vertexColorLocation = glGetUniformLocation(shaderProgram, "vertexColor");
-		glUseProgram(shaderProgram);
+		int vertexColorLocation = glGetUniformLocation(shaders.getId(), "vertexColor");
+		shaders.use();
 		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
 		// draw triangle
@@ -240,7 +176,7 @@ int main(void)
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
 	glDeleteBuffers(1, &EBO);
-	glDeleteProgram(shaderProgram);
+	// glDeleteProgram(shaderProgram);
 
 	glfwTerminate();
 	return 0;
