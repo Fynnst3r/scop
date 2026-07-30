@@ -15,4 +15,6 @@
 
 #include "shader.hpp"
 
+unsigned int loadTex(const char *pathToTex, unsigned int format);
+
 #endif

@@ -1,10 +1,10 @@
 CXX=	c++
-CXXFLAGS=	-Wall -Wextra -Werror --std=c++17
+CXXFLAGS=	-Wall -Wextra -Werror --std=c++17 -g -fsanitize=address
 LDFLAGS= 	-lglfw -lGL
 
 NAME=	scop
 
-SRCS=	test.cpp shader.cpp
+SRCS=	test.cpp shader.cpp loadTex.cpp
 OBJS=	$(SRCS:.cpp=.o)
 
 all: $(NAME)

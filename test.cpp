@@ -25,11 +25,14 @@ const char *fragmentShaderSource =
 		   FragColor = vec4(vertexColor, 1);
 		})";
 
-
 void processInput(GLFWwindow *window)
 {
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
+
+	// if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
+		
+
 }
 
 void makeTriangle(unsigned int *VBO, unsigned int *VAO)
@@ -37,9 +40,9 @@ void makeTriangle(unsigned int *VBO, unsigned int *VAO)
 	// Create Triangle vertecies
 	float vertices[] = {
 		// positions        // colors
-		0.5f, -0.5f, 0.0f,	1.0f, 0.0f, 0.0f,  // bottom right
+		0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom right
 		-0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, // bottom left
-		0.0f, 0.5f, 0.0f,	0.0f, 0.0f, 1.0f // top
+		0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f	  // top
 	};
 
 	glGenBuffers(1, VBO);
@@ -67,10 +70,11 @@ void makeTriangle(unsigned int *VBO, unsigned int *VAO)
 void makeRectangle(unsigned int *VBO, unsigned int *VAO, unsigned int *EBO)
 {
 	float vertices[] = {
-		0.5f, 0.5f, 0.0f,	// top right
-		0.5f, -0.5f, 0.0f,	// bottom right
-		-0.5f, -0.5f, 0.0f, // bottom left
-		-0.5f, 0.5f, 0.0f	// top left
+		// positions        // colors         // texture coords
+		0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f, 2.0f, 2.0f,	  // top right
+		0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	2.0f, 0.0f,  // bottom right
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,	0.0f, 0.0f, // bottom left
+		-0.5f, 0.5f, 0.0f,	1.0f, 1.0f, 0.0f,	0.0f, 2.0f	  // top left
 	};
 	unsigned int indices[] = {
 		// note that we start from 0!
@@ -90,8 +94,15 @@ void makeRectangle(unsigned int *VBO, unsigned int *VAO, unsigned int *EBO)
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, *EBO);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void *)0);
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)0);
 	glEnableVertexAttribArray(0);
+	// color attribute
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+	// texture coord attribute
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void *)(6 * sizeof(float)));
+	glEnableVertexAttribArray(2);
 
 	// note that this is allowed, the call to glVertexAttribPointer registered VBO as the vertex attribute's bound vertex buffer object so afterwards we can safely unbind
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -121,7 +132,7 @@ int main(void)
 		return -1;
 
 	/* Create a windowed mode window and its OpenGL context */
-	window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "Penis Arsch", NULL, NULL);
+	window = glfwCreateWindow(WIN_WIDTH, WIN_HEIGHT, "Penis Arsch®", NULL, NULL);
 	if (!window)
 	{
 		glfwTerminate();
@@ -137,11 +148,17 @@ int main(void)
 	unsigned int VAO; // VAO - vertex array object
 	unsigned int EBO; // EBO - element buffer object
 
-	makeTriangle(&VBO, &VAO);
-	// makeRectangle(&VBO, &VAO, &EBO);
+	// makeTriangle(&VBO, &VAO);
+	makeRectangle(&VBO, &VAO, &EBO);
+
+	unsigned int texture1 = loadTex("resources/mine/lank.png", GL_RGB);
+	unsigned int texture2 = loadTex("resources/mine/genon.png", GL_RGBA);
 
 	Shader shaders("./shaders/shader.vs", GL_VERTEX_SHADER);
-	shaders.addShader(fragmentShaderSource, GL_FRAGMENT_SHADER);
+	shaders.addShader("./shaders/shader.fs", GL_FRAGMENT_SHADER);
+	shaders.use();													// don't forget to activate the shader before setting uniforms!
+	glUniform1i(glGetUniformLocation(shaders.getId(), "texture1"), 0); // set it manually
+	shaders.setInt("texture2", 1);								// or with shader class
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
@@ -152,19 +169,24 @@ int main(void)
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		float timeValue = glfwGetTime();
-		float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-		int vertexColorLocation = glGetUniformLocation(shaders.getId(), "vertexColor");
-		shaders.use();
-		glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
+		// float timeValue = glfwGetTime();
+		// float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
+		// int vertexColorLocation = glGetUniformLocation(shaders.getId(), "vertexColor");
+		// glUniform4f(vertexColorLocation, 0.0f, greenValue, 0.0f, 1.0f);
 
 		// draw triangle
-		glBindVertexArray(VAO);
-		glDrawArrays(GL_TRIANGLES, 0, 3);
+		// glBindVertexArray(VAO);
+		// glDrawArrays(GL_TRIANGLES, 0, 3);
 
 		// draw rectangle
-		// glBindVertexArray(VAO);
-		// glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, texture1);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, texture2);
+
+		glBindVertexArray(VAO);
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 		/* Swap front and back buffers */
 		glfwSwapBuffers(window);
