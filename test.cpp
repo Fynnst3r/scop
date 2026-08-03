@@ -31,8 +31,6 @@ void processInput(GLFWwindow *window)
 		glfwSetWindowShouldClose(window, true);
 
 	// if (glfwGetKey(window, GLFW_KEY_KP_ADD) == GLFW_PRESS)
-		
-
 }
 
 void makeTriangle(unsigned int *VBO, unsigned int *VAO)
@@ -71,10 +69,10 @@ void makeRectangle(unsigned int *VBO, unsigned int *VAO, unsigned int *EBO)
 {
 	float vertices[] = {
 		// positions        // colors         // texture coords
-		0.5f, 0.5f, 0.0f,	1.0f, 0.0f, 0.0f, 2.0f, 2.0f,	  // top right
-		0.5f, -0.5f, 0.0f,	0.0f, 1.0f, 0.0f,	2.0f, 0.0f,  // bottom right
-		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f,	0.0f, 0.0f, // bottom left
-		-0.5f, 0.5f, 0.0f,	1.0f, 1.0f, 0.0f,	0.0f, 2.0f	  // top left
+		0.5f, 0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,	  // top right
+		0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
+		-0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // bottom left
+		-0.5f, 0.5f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f	  // top left
 	};
 	unsigned int indices[] = {
 		// note that we start from 0!
@@ -156,9 +154,9 @@ int main(void)
 
 	Shader shaders("./shaders/shader.vs", GL_VERTEX_SHADER);
 	shaders.addShader("./shaders/shader.fs", GL_FRAGMENT_SHADER);
-	shaders.use();													// don't forget to activate the shader before setting uniforms!
+	shaders.use();													   // don't forget to activate the shader before setting uniforms!
 	glUniform1i(glGetUniformLocation(shaders.getId(), "texture1"), 0); // set it manually
-	shaders.setInt("texture2", 1);								// or with shader class
+	shaders.setInt("texture2", 1);									   // or with shader class
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))
@@ -168,6 +166,12 @@ int main(void)
 		/* Render here */
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
+
+		glm::mat4 trans = glm::mat4(1.0f);
+		trans = glm::rotate(trans, (float)glm::radians(90.0f) * (float)glfwGetTime(), glm::vec3(0, 0, 1));
+
+		auto bind = glGetUniformLocation(shaders.getId(), "transform");
+		glUniformMatrix4fv(bind, 1, 0, glm::value_ptr(trans));
 
 		// float timeValue = glfwGetTime();
 		// float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
